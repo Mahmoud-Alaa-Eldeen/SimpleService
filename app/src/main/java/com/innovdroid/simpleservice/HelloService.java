@@ -21,7 +21,10 @@ public class HelloService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-
+    
+    // issue : when app destroy, service recreate again
+    //You may check inside onCreate & onStartCommand not to run the code
+    // when service is recreated (for ex. check is it  time to alarm or not, if true, run the alarm).
     @Override
     public void onCreate() {
         Toast.makeText(this, "Service created", Toast.LENGTH_SHORT).show();
