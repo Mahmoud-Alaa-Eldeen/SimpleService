@@ -1,3 +1,7 @@
+// issue : when app destroy, service recreate again
+    //You may check inside onCreate & onStartCommand not to run the code
+    // when service is recreated (for ex. check is it  time to alarm or not, if true, run the alarm).
+
 package com.innovdroid.simpleservice;
 
 import android.app.Service;
@@ -11,20 +15,30 @@ import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.widget.Toast;
 
+import java.util.Random;
 
+/**
+ * Created by mahmoud on 06/09/17.
+ */
 
 public class HelloService extends Service {
 
+    // Binder given to clients
+    private final IBinder mBinder = new LocalBinder();
+    private final Random mgenerator = new Random();
+    // indicates whether onRebind should be used
+    boolean mAllowRebind;
 
     @Nullable
-    @Override
+    @Override // A client is binding to the service
     public IBinder onBind(Intent intent) {
-        return null;
+
+        Toast.makeText(this, "onBind", Toast.LENGTH_SHORT).show();
+
+
+        return mBinder;
     }
-    
-    // issue : when app destroy, service recreate again
-    //You may check inside onCreate & onStartCommand not to run the code
-    // when service is recreated (for ex. check is it  time to alarm or not, if true, run the alarm).
+
     @Override
     public void onCreate() {
         Toast.makeText(this, "Service created", Toast.LENGTH_SHORT).show();
@@ -48,7 +62,18 @@ public class HelloService extends Service {
 
     }
 
+    @Override // called when all clients have unbound with unbindService
+    public boolean onUnbind(Intent intent) {
+        Toast.makeText(this, "onUnbind", Toast.LENGTH_SHORT).show();
+        return mAllowRebind;
+    }
 
+    @Override
+    public void onRebind(Intent intent) {
+        Toast.makeText(this, "onRebind" +
+                "", Toast.LENGTH_SHORT).show();
+
+    }
 
     @Override
     public void onDestroy() {
@@ -57,6 +82,18 @@ public class HelloService extends Service {
         Toast.makeText(this, "Service destroyed !", Toast.LENGTH_SHORT).show();
     }
 
+    //  to make instance of service
+    public class LocalBinder extends Binder {
 
+        HelloService getService() {
 
+            return HelloService.this;
+
+        }
+    }
+
+    public int getRandomNumber() {
+
+        return mgenerator.nextInt(100);
+    }
 }
