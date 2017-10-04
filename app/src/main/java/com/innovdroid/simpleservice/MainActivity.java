@@ -2,16 +2,24 @@ package com.innovdroid.simpleservice;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.app.Service;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 
 import java.util.Calendar;
 
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
+    HelloService mservice;
+    boolean mbound = false;
 
 
     @Override
@@ -22,37 +30,44 @@ public class MainActivity extends AppCompatActivity {
 
     public void startService(View view) {
 
-        // startService(new Intent(getBaseContext(), HelloService.class));
+        bindService(new Intent(getBaseContext(), HelloService.class), mConnection, Context.BIND_AUTO_CREATE);
 
-        Intent myIntent = new Intent(MainActivity.this, HelloService.class);
-        AlarmManager alarmMnager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        PendingIntent pendingIntent = PendingIntent.getService(MainActivity.this, 0, myIntent, 0);
-
-        Calendar calendar = getUserAlarmTime();
-        // to repeat alarm every day. run pendingIntent (go to service to fire a sound/ notification.. etc)
-        alarmMnager.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 24 * 60 * 60 * 1000, pendingIntent);
     }
 
     public void stopService(View view) {
 
-        stopService(new Intent(getBaseContext(), HelloService.class));
+       if (mbound){
 
-    }
-
-    // can pass params gotten from user
-    Calendar getUserAlarmTime() {
-        Calendar calendar = Calendar.getInstance();
-
-        calendar.set(Calendar.HOUR_OF_DAY, 00);
-        calendar.set(Calendar.MINUTE, 20);
-        calendar.set(Calendar.SECOND, 0);
-        return calendar;
+           unbindService(mConnection);
+           mbound=false;
+       }
 
     }
 
 
     public void getFromService(View view) {
 
+        if (mbound) {
+
+            int num = mservice.getRandomNumber();
+            Toast.makeText(mservice, "Num:" + num, Toast.LENGTH_SHORT).show();
+        }
     }
+
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
+
+            HelloService.LocalBinder binder = (HelloService.LocalBinder)service ;
+            mservice = binder.getService();
+            mbound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mbound = false;
+        }
+    };
 }
 
